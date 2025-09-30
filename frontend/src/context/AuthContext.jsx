@@ -1,8 +1,8 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import {jwtDecode} from "jwt-decode"
 
 
-const AuthContext = createContext()
+ const AuthContext = createContext()
 
 //getting userdata from local storage
 const getUser = (token)=>{
@@ -55,18 +55,24 @@ export const AuthProvider = ({children}) => {
     }
 
 
-    //api handler
-     const api = (method, url, data = {}) => {
-    return fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        // Attach JWT token to Authorization header
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
+ // api handler (corrected)
+const api = (method, url, data = {}) => {
+  // 1. Create the base configuration object
+  const config = {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      // Attach JWT token to Authorization header
+      'Authorization': `Bearer ${token}`,
+    },
   };
+  const methodsWithBody = ['POST', 'PUT', 'PATCH', 'DELETE']; // DELETE is sometimes included
+  if (methodsWithBody.includes(method.toUpperCase())) {
+    config.body = JSON.stringify(data);
+  } else if (method.toUpperCase() === 'GET' && Object.keys(data).length > 0) {
+  }
+  return fetch(url, config);
+};
 
 
    return (
@@ -75,3 +81,5 @@ export const AuthProvider = ({children}) => {
     </AuthContext.Provider>
   );
 }
+
+export const useAuth = () => useContext(AuthContext);
